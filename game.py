@@ -55,6 +55,7 @@ def OrganizePrint(grid):
             print(grid[i][j], end = " ")
         print()
 
+
 def PlaceShip(grid, ships):
     for ship in ships:
         print("Place your " + ship.name + f"({ship.length})")
@@ -99,11 +100,11 @@ def PlaceShip(grid, ships):
                 grid[choiceRow+i][choiceCol] = ship.length
                 ship.position.append([choiceRow+i, choiceCol])
 
-        OrganizePrint(grid)
+        # OrganizePrint(grid)
 
 def CheckIfHit(grid, row, col):
     if grid[row][col] == "X" or grid[row][col] == "M":
-        print("You have already hit this spot!")
+        # print("You have already hit this spot!")
         return True
     return False
 
@@ -150,7 +151,7 @@ def TestMain():
     Setup()
     while not gameOver:
         numTurns += 1
-        print("Player 2 turn!")
+        # print("Player 2 turn!")
         RandomAttack(p1grid, p1ships) 
         if CheckDead(p1ships):
             print("game over print p2 wins")
@@ -160,19 +161,16 @@ def TestMain():
 
 def PlaceShipRandom(grid, ships):
     for ship in ships:
-
         if random.randint(0,9) < 5: #horizontal
             while True:
                 choiceRow = random.randint(0,9)
                 choiceCol = random.randint(0,10-ship.length)
                 validPlacement = True
                 for shipH in ships:
-                    for [rp, cp] in shipH.position:
-                        if rp == choiceRow and cp == choiceCol:
-                            validPlacement = False
-                if not validPlacement:
-                    choiceRow = random.randint(0,9)
-                    choiceCol = random.randint(0,10-ship.length)
+                    for offset in range(ship.length):
+                        for [rp, cp] in shipH.position:
+                            if rp == choiceRow and cp == choiceCol + offset:
+                                validPlacement = False
                 if validPlacement: break
             for i in range(ship.length):
                 grid[choiceRow][choiceCol+i] = ship.length
@@ -185,77 +183,92 @@ def PlaceShipRandom(grid, ships):
                 choiceCol = random.randint(0,9)
                 validPlacement = True
                 for shipV in ships:
-                    for [rp, cp] in shipV.position:
-                        if rp == choiceRow and cp == choiceCol:
-                            validPlacement = False
-                if not validPlacement:
-                    choiceRow = random.randint(0,10-ship.length)
-                    choiceCol = random.randint(0,9)
+                    for offset in range(ship.length):
+                        for [rp, cp] in shipV.position:
+                            if rp == choiceRow + offset and cp == choiceCol:
+                                validPlacement = False
                 if validPlacement: break
             for i in range(ship.length):
                 grid[choiceRow+i][choiceCol] = ship.length
                 ship.position.append([choiceRow+i, choiceCol])
 
-    OrganizePrint(grid)
+    # OrganizePrint(grid)
     print("\n\n\n\n\n\n\n\n")
 
+
+
 def Hit(grid, ships, choiceRow, choiceCol):
-    if grid[choiceRow][choiceCol] != "0":
+    if grid[choiceRow][choiceCol] == "0":
+        # print("miss.")
+        grid[choiceRow][choiceCol] = "M"
+        return "M"
+    else:
         for ship in ships:
             for i in ship.position:
                 if i[0] == choiceRow and i[1] == choiceCol:
                     ship.hp -= 1
-                    if ship.hp == 0:
-                        print(f"You sunk my {ship.name}")
+                    # if hp == 0:
+                        # print(f"You sunk my {ship.name}")
         # print("hit!", choiceRow, choiceCol)
         grid[choiceRow][choiceCol] = "X"
         return "X"
+
+def AttemptHit(grid, ships, choiceRow, choiceCol):
+    if not CheckIfHit(grid, choiceRow, choiceCol):
+        return Hit(grid, ships, choiceRow, choiceCol)
     else:
-        print("miss.")
-        grid[choiceRow][choiceCol] = "M"
-        return "M"
+        print("duplicate hit")
+        return False
 
 
 def RandomAttack(grid, ships):
     global huntMode, hitStack
     if not hitStack: #huntmode
-        RA = random.randrange(0, 9)
+        RA = random.randrange(0, 10)
         if RA %2 == 1:
-            CA = random.randrange(1, 9, 2)
+            CA = random.randrange(1, 10, 2)
         else:
-            CA = random.randrange(0, 9, 2)
-
+            CA = random.randrange(0, 10, 2)
         while CheckIfHit(grid, RA, CA):
-            RA = random.randrange(0, 9)
+            RA = random.randrange(0, 10)
             if RA %2 == 1:
-                CA = random.randrange(1, 9, 2)
+                CA = random.randrange(1, 10, 2)
             else:
-                CA = random.randrange(0, 9, 2)
-        hitResult = Hit(grid, ships, RA, CA)
-        if hitResult == "X":
+                CA = random.randrange(0, 10, 2)
+
+        hitShip = AttemptHit(grid, ships, RA, CA)
+        if hitShip == "X":
             huntMode = False
             addNextMove(RA, CA, grid)
-        OrganizePrint(grid)
+        # OrganizePrint(grid)
     else:
         target = hitStack.pop()
         RA, CA = target[0], target[1]
-        hitResult = Hit(grid, ships, target[0], target[1])
-        if hitResult == "X":
-            print("Test")
+        hitShip = AttemptHit(grid, ships, target[0], target[1])
+        if hitShip == "X":
             huntMode = False
             addNextMove(RA, CA, grid)
         if len(hitStack) == 0:
             huntMode = True
             
-def addNextMove(RA, CA, grid):
-    if RA != 0 and (grid[RA-1][CA] != "X" and grid[RA-1][CA] != "M"):
+def addNextMove(RA, CA, grid): #use checkifhit func instead of condition in ()'s
+    if RA != 0 and not CheckIfHit(grid, RA-1, CA):
         hitStack.append([RA-1, CA])
-    if CA != 0 and (grid[RA][CA-1] != "X" and grid[RA][CA-1] != "M"):
+    if CA != 0 and not CheckIfHit(grid, RA, CA-1):
         hitStack.append([RA, CA-1])
-    if RA != 9 and (grid[RA+1][CA] != "X" and grid[RA+1][CA] != "M"):
+    if RA != 9 and not CheckIfHit(grid, RA+1, CA):
         hitStack.append([RA+1, CA])
-    if CA != 9 and (grid[RA][CA+1] != "X" and grid[RA][CA+1] != "M"):
+    if CA != 9 and not CheckIfHit(grid, RA, CA+1):
         hitStack.append([RA, CA+1])
+
+    # if RA != 0 and (grid[RA-1][CA] != "X" and grid[RA-1][CA] != "M"):
+    #     hitStack.append([RA-1, CA])
+    # if CA != 0 and (grid[RA][CA-1] != "X" and grid[RA][CA-1] != "M"):
+    #     hitStack.append([RA, CA-1])
+    # if RA != 9 and (grid[RA+1][CA] != "X" and grid[RA+1][CA] != "M"):
+    #     hitStack.append([RA+1, CA])
+    # if CA != 9 and (grid[RA][CA+1] != "X" and grid[RA][CA+1] != "M"):
+    #     hitStack.append([RA, CA+1])
 
 
 
