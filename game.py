@@ -31,21 +31,18 @@ class Ship:
         self.hp = length
         self.position = []
 
+def initShips():
+    p1ship5 = Ship("carrier", 5)
+    p1ship4 = Ship("battleship", 4)
+    p1ship3 = Ship("submarine", 3)
+    p1ship2 = Ship("cruiser", 3)
+    p1ship1 = Ship("destroyer", 2)
 
-p1ship5 = Ship("carrier", 5)
-p1ship4 = Ship("battleship", 4)
-p1ship3 = Ship("submarine", 3)
-p1ship2 = Ship("cruiser", 3)
-p1ship1 = Ship("destroyer", 2)
+    p1ships = [p1ship5, p1ship4, p1ship3, p1ship2, p1ship1]
+    return p1ships
 
-p2ship5 = Ship("carrier", 5)
-p2ship4 = Ship("battleship", 4)
-p2ship3 = Ship("submarine", 3)
-p2ship2 = Ship("cruiser", 3)
-p2ship1 = Ship("destroyer", 2)
-
-p1ships = [p1ship5, p1ship4, p1ship3, p1ship2, p1ship1]
-p2ships = [p2ship5, p2ship4, p2ship3, p2ship2, p2ship1]
+p1ships = initShips()
+p2ships = initShips()
 
 
 
@@ -116,7 +113,7 @@ def CheckDead(ships):
             
 
 def Turns(grid, hitgrid, ships):
-    OrganizePrint(hitgrid)
+    # OrganizePrint(hitgrid)
     choiceRow = int(input("Row: "))
     choiceCol = int(input("Column: "))
     while CheckIfHit(hitgrid, choiceRow, choiceCol):
@@ -125,10 +122,16 @@ def Turns(grid, hitgrid, ships):
     Hit(grid, ships, choiceRow, choiceCol)
 
 def Setup():
+    global p1ships, p2ships, p1grid, p2grid
+    p1ships = initShips()
+    p2ships = initShips()
+    p1grid = createGrid()
+    p2grid = createGrid()
+
     PlaceShipRandom(p1grid, p1ships)
-    print("\n\n\n\n\n\n\n")
+    # print("\n\n\n\n\n\n\n")
     PlaceShipRandom(p2grid, p2ships)
-    print("\n\n\n\n\n\n\n")
+    # print("\n\n\n\n\n\n\n")
 
 def Main():
     Setup()
@@ -154,9 +157,10 @@ def TestMain():
         # print("Player 2 turn!")
         RandomAttack(p1grid, p1ships) 
         if CheckDead(p1ships):
-            print("game over print p2 wins")
-            print(numTurns)
+            # print("game over print p2 wins")
+            # print(numTurns)
             break
+    # OrganizePrint(p1grid)
 
 
 def PlaceShipRandom(grid, ships):
@@ -193,7 +197,7 @@ def PlaceShipRandom(grid, ships):
                 ship.position.append([choiceRow+i, choiceCol])
 
     # OrganizePrint(grid)
-    print("\n\n\n\n\n\n\n\n")
+    # print("\n\n\n\n\n\n\n\n")
 
 
 
@@ -217,24 +221,18 @@ def AttemptHit(grid, ships, choiceRow, choiceCol):
     if not CheckIfHit(grid, choiceRow, choiceCol):
         return Hit(grid, ships, choiceRow, choiceCol)
     else:
-        print("duplicate hit")
+        # print("duplicate hit")
         return False
 
 
 def RandomAttack(grid, ships):
     global huntMode, hitStack
     if not hitStack: #huntmode
-        RA = random.randrange(0, 10)
-        if RA %2 == 1:
-            CA = random.randrange(1, 10, 2)
-        else:
-            CA = random.randrange(0, 10, 2)
+        RA = random.randint(0, 9)
+        CA = random.randint(0, 9)
         while CheckIfHit(grid, RA, CA):
-            RA = random.randrange(0, 10)
-            if RA %2 == 1:
-                CA = random.randrange(1, 10, 2)
-            else:
-                CA = random.randrange(0, 10, 2)
+            RA = random.randint(0, 9)
+            CA = random.randint(0, 9)
 
         hitShip = AttemptHit(grid, ships, RA, CA)
         if hitShip == "X":
@@ -271,7 +269,11 @@ def addNextMove(RA, CA, grid): #use checkifhit func instead of condition in ()'s
     #     hitStack.append([RA, CA+1])
 
 
-
+sum = 0
 if __name__ == "__main__":
-    TestMain()
+    for i in range(10000):
+        numTurns = 0
+        TestMain()
+        sum += numTurns
+    print(sum/10000)
 
